@@ -1,15 +1,16 @@
 # TemplateAPSD
 
 <p>
-COMPILE WITH make
+Use make to compile
+./main.out ot execute without mpi
 
 *allegro5 and openmpi needed*
 </p>
 
 <p>
-Q TO SWITCH AUTOMA
-
-R TO RESET BOARD
-
-ESC TO EXIT PROGRAM
+Commands:
+ESC - QUIT
+R - RESET
+LEFT/RIGHT ARROW - PREVIOUS/NEXT AUTOMATA
+UP/DOWN ARROW - CHANGE COLOR
 </p>
