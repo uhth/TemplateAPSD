@@ -1,8 +1,8 @@
-
 #include "../include/cellular_automata.h"
 #include "../include/uint8_array2d.h"
 #include "../include/graphics.h"
 #include "../include/config.h"
+#include "../include/mpi_wrap.h"
 
 #include <iostream>
 #include <chrono>
@@ -14,29 +14,49 @@ void switchToNextAutomata(std::vector<std::unique_ptr<Automata>>&,GraphicsContex
 void switchToPreviousAutomata(std::vector<std::unique_ptr<Automata>>&,GraphicsContext&,std::unique_ptr<Array2D>&,size_t&);
 void resetAutomata(std::vector<std::unique_ptr<Automata>>&,GraphicsContext&,std::unique_ptr<Array2D>&,size_t&);
 
-int main() {
-	//vars
+int main(int argc, char *argv[]) {
+	// Mpi init
+	MpiWrapper mpiWrapper(DIM,DIM);
+	mpiWrapper.init(argc,argv);
+	
+	// Common Vars
+	std::unique_ptr<Array2D> procArray2d = std::make_unique<Array2D>(mpiWrapper.num_cols, DIM);
 	std::vector<std::unique_ptr<Automata>> automatas;
-	std::unique_ptr<Array2D> array2d;
-	GraphicsContext graphics(DIM, DIM);
 	size_t currentAutomata = 0;
-	//inits
+	
+	// Common Inits
 	initAutomatas(automatas);
-	graphics.init();
-	resetAutomata(automatas, graphics, array2d, currentAutomata);
 
-	while(handleEvent(graphics.popFromEventQueue(), automatas, graphics, array2d, currentAutomata)) {
-		//logic
-		array2d->callAlgFuncOnEveryElementUseAux(automatas[currentAutomata]->getAlgorithmFunc());
-		//graphics
-		graphics.printOnScreen(array2d.get());
-		//sleep
-		std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
+	/* PROCESS EXECUTION FLOW */
+	if(mpiWrapper.my_id != 0) {
+		mpiWrapper.recvInitialArray(procArray2d.get());
 	}
-	graphics.exit();
+	
+	/* MASTER EXECUTION FLOW */
+	if(mpiWrapper.my_id == 0) {
+		GraphicsContext graphics(DIM, DIM);
+		graphics.init();
+		std::unique_ptr<Array2D> masterArray2d;
+		resetAutomata(automatas, graphics, masterArray2d, currentAutomata);
+		mpiWrapper.sendInitialArray(masterArray2d.get(), procArray2d.get());
+		//loop
+		while(handleEvent(graphics.popFromEventQueue(), automatas, graphics, masterArray2d, currentAutomata)) {
+			//logic
+			masterArray2d->callAlgFuncOnEveryElementUseAux(automatas[currentAutomata]->getAlgorithmFunc());
+			//graphics
+			graphics.printOnScreen(masterArray2d.get());
+			//sleep
+			std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
+		}
+		graphics.exit();
+	}
+
+	mpiWrapper.exit();
+
 	return 0;
 }
 
+/* MASTER ONLY */
 bool handleEvent(EVENT event, std::vector<std::unique_ptr<Automata>>& automatas, GraphicsContext& graphics, std::unique_ptr<Array2D>& array2d, size_t& currentAutomata) {
 	switch(event) {
 		case EVENT::EXIT:
