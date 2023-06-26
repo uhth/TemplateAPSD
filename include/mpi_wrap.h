@@ -4,6 +4,7 @@
 #include <mpi.h>
 #include "uint8_array2d.h"
 #include "config.h"
+#include "common.h"
 
 class MpiWrapper {
     public:
@@ -19,8 +20,12 @@ class MpiWrapper {
         void init(int&, char**);
         void sendInitialArray(Array2D*,Array2D*);
         void recvInitialArray(Array2D*);
-        void syncArray2d();
-        inline void exit() {MPI_Finalize();};
+        void sendProcArray(Array2D*);
+        void recvProcArray(Array2D*);
+        void putMastersContribute(Array2D*, Array2D*);
+        EVENT syncEvents(EVENT=EVENT::NONE);
+        void ProcessAndSyncProcArray2d(Array2D*, std::function<uint_fast8_t(Array2D*,size_t,size_t,size_t,size_t)>);
+        inline void exit() {MPI_Finalize();}
 };
 
 #endif

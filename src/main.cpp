@@ -8,11 +8,9 @@
 #include <chrono>
 #include <thread>
 
-bool handleEvent(EVENT,std::vector<std::unique_ptr<Automata>>&,GraphicsContext&,std::unique_ptr<Array2D>&,size_t&);
+bool handleEventMaster(EVENT,std::vector<std::unique_ptr<Automata>>&,GraphicsContext&,MpiWrapper&,std::unique_ptr<Array2D>&,std::unique_ptr<Array2D>&,size_t&);
+bool handleEventProc(EVENT,std::vector<std::unique_ptr<Automata>>&,MpiWrapper&,std::unique_ptr<Array2D>&,size_t&);
 void initAutomatas(std::vector<std::unique_ptr<Automata>>&);
-void switchToNextAutomata(std::vector<std::unique_ptr<Automata>>&,GraphicsContext&,std::unique_ptr<Array2D>&,size_t&);
-void switchToPreviousAutomata(std::vector<std::unique_ptr<Automata>>&,GraphicsContext&,std::unique_ptr<Array2D>&,size_t&);
-void resetAutomata(std::vector<std::unique_ptr<Automata>>&,GraphicsContext&,std::unique_ptr<Array2D>&,size_t&);
 
 int main(int argc, char *argv[]) {
 	// Mpi init
@@ -27,22 +25,35 @@ int main(int argc, char *argv[]) {
 	// Common Inits
 	initAutomatas(automatas);
 
+
 	/* PROCESS EXECUTION FLOW */
 	if(mpiWrapper.my_id != 0) {
 		mpiWrapper.recvInitialArray(procArray2d.get());
+		while(1) {
+			EVENT event = mpiWrapper.syncEvents();
+			if(!handleEventProc(event, automatas, mpiWrapper, procArray2d, currentAutomata)) break;
+			mpiWrapper.ProcessAndSyncProcArray2d(procArray2d.get(), automatas[currentAutomata]->getAlgorithmFunc());
+			mpiWrapper.sendProcArray(procArray2d.get());
+		}
 	}
-	
+
 	/* MASTER EXECUTION FLOW */
 	if(mpiWrapper.my_id == 0) {
 		GraphicsContext graphics(DIM, DIM);
 		graphics.init();
 		std::unique_ptr<Array2D> masterArray2d;
-		resetAutomata(automatas, graphics, masterArray2d, currentAutomata);
+		handleEventMaster(EVENT::RESET, automatas, graphics, mpiWrapper, masterArray2d, procArray2d, currentAutomata);
 		mpiWrapper.sendInitialArray(masterArray2d.get(), procArray2d.get());
 		//loop
-		while(handleEvent(graphics.popFromEventQueue(), automatas, graphics, masterArray2d, currentAutomata)) {
+		while(1) {
+			EVENT event = graphics.popFromEventQueue();
+			mpiWrapper.syncEvents(event);
+			if(!handleEventMaster(event, automatas, graphics, mpiWrapper, masterArray2d, procArray2d, currentAutomata)) break;
 			//logic
-			masterArray2d->callAlgFuncOnEveryElementUseAux(automatas[currentAutomata]->getAlgorithmFunc());
+			mpiWrapper.ProcessAndSyncProcArray2d(procArray2d.get(), automatas[currentAutomata]->getAlgorithmFunc());
+			masterArray2d->clearArray();
+			mpiWrapper.recvProcArray(masterArray2d.get());
+			mpiWrapper.putMastersContribute(masterArray2d.get(), procArray2d.get());
 			//graphics
 			graphics.printOnScreen(masterArray2d.get());
 			//sleep
@@ -57,20 +68,29 @@ int main(int argc, char *argv[]) {
 }
 
 /* MASTER ONLY */
-bool handleEvent(EVENT event, std::vector<std::unique_ptr<Automata>>& automatas, GraphicsContext& graphics, std::unique_ptr<Array2D>& array2d, size_t& currentAutomata) {
+bool handleEventMaster(EVENT event, std::vector<std::unique_ptr<Automata>>& automatas, GraphicsContext& graphics, MpiWrapper& mpiWrapper, std::unique_ptr<Array2D>& masterArray2d, std::unique_ptr<Array2D>& procArray2d, size_t& currentAutomata) {
+	if(mpiWrapper.my_id != 0) return true;
 	switch(event) {
 		case EVENT::EXIT:
 			return false;
 		case EVENT::NONE:
 			break;
 		case EVENT::RESET:
-			resetAutomata(automatas, graphics, array2d, currentAutomata);
+			masterArray2d = automatas[currentAutomata]->generateUniqueArray(DIM);
+			graphics.setColorToneMultiplier(automatas[currentAutomata]->getColorToneMultiplier());
+			mpiWrapper.sendInitialArray(masterArray2d.get(), procArray2d.get());
 			break;
 		case EVENT::NEXT:
-			switchToNextAutomata(automatas, graphics, array2d, currentAutomata);
+			currentAutomata = (currentAutomata + 1) % automatas.size();
+			masterArray2d = automatas[currentAutomata]->generateUniqueArray(DIM);
+			graphics.setColorToneMultiplier(automatas[currentAutomata]->getColorToneMultiplier());
+			mpiWrapper.sendInitialArray(masterArray2d.get(), procArray2d.get());
 			break;
 		case EVENT::PREVIOUS:
-			switchToNextAutomata(automatas, graphics, array2d, currentAutomata);
+			currentAutomata = (currentAutomata - 1 >= 0) ? currentAutomata - 1 : automatas.size() - 1;
+			masterArray2d = automatas[currentAutomata]->generateUniqueArray(DIM);
+			graphics.setColorToneMultiplier(automatas[currentAutomata]->getColorToneMultiplier());
+			mpiWrapper.sendInitialArray(masterArray2d.get(), procArray2d.get());
 			break;
 	};
 	return true;
@@ -78,23 +98,31 @@ bool handleEvent(EVENT event, std::vector<std::unique_ptr<Automata>>& automatas,
 
 void initAutomatas(std::vector<std::unique_ptr<Automata>>& automatas) {
 	automatas.push_back(std::make_unique<AutomataEcoLibra>());
-	automatas.push_back(std::make_unique<AutomataForest>());
 	automatas.push_back(std::make_unique<AutomataGoL>());
+	automatas.push_back(std::make_unique<AutomataForest>());
 	automatas.push_back(std::make_unique<AutomataFaders>());
 	automatas.push_back(std::make_unique<AutomataFractal>());
 }
 
-void switchToNextAutomata(std::vector<std::unique_ptr<Automata>>& automatas, GraphicsContext& graphics, std::unique_ptr<Array2D>& array2d, size_t& currentAutomata) {
-	currentAutomata = (currentAutomata + 1) % automatas.size();
-	resetAutomata(automatas, graphics, array2d, currentAutomata);
-}
 
-void switchToPreviousAutomata(std::vector<std::unique_ptr<Automata>>& automatas, GraphicsContext& graphics, std::unique_ptr<Array2D>& array2d, size_t& currentAutomata) {
-	currentAutomata = (currentAutomata - 1 >= 0) ? currentAutomata - 1 : automatas.size() - 1;
-	resetAutomata(automatas, graphics, array2d, currentAutomata);
-}
-
-void resetAutomata(std::vector<std::unique_ptr<Automata>>& automatas, GraphicsContext& graphics, std::unique_ptr<Array2D>& array2d, size_t& currentAutomata) {
-	array2d = automatas[currentAutomata]->generateUniqueArray(DIM);
-	graphics.setColorToneMultiplier(automatas[currentAutomata]->getColorToneMultiplier());
+bool handleEventProc(EVENT event, std::vector<std::unique_ptr<Automata>>& automatas, MpiWrapper& mpiWrapper, std::unique_ptr<Array2D>& procArray2d, size_t& currentAutomata) {
+	if(mpiWrapper.my_id == 0) return true;
+	switch(event) {
+		case EVENT::EXIT:
+			return false;
+		case EVENT::NONE:
+			break;
+		case EVENT::RESET:
+			mpiWrapper.recvInitialArray(procArray2d.get());
+			break;
+		case EVENT::NEXT:
+			currentAutomata = (currentAutomata + 1) % automatas.size();
+			mpiWrapper.recvInitialArray(procArray2d.get());
+			break;
+		case EVENT::PREVIOUS:
+			currentAutomata = (currentAutomata - 1 >= 0) ? currentAutomata - 1 : automatas.size() - 1;
+			mpiWrapper.recvInitialArray(procArray2d.get());
+			break;
+	};
+	return true;
 }

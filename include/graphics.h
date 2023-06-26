@@ -11,10 +11,7 @@
 
 #include "uint8_array2d.h"
 #include "config.h"
-
-enum EVENT : uint_fast8_t {
-    EXIT, NONE, RESET, NEXT, PREVIOUS
-};
+#include "common.h"
 
 class TimeTracker {
     private:

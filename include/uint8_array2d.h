@@ -12,6 +12,15 @@
 /* ARRAY2D */
 /* WRAPS A ONE DIMENSIONAL ARRAY FOR IT TO BE USED AS A BI-DIMENSIONAL ARRAY */
 
+struct Array2DRange {
+    int startRow;
+    int endRow;
+    int startCol;
+    int endCol;
+    int rowBoundary;
+    int colBoundary;
+};
+
 class Array2D {
     private:
         Array2D() {} // Beware of this, because it doesn't allocate memory on it's own
@@ -68,8 +77,10 @@ class Array2D {
         inline size_t getSize() {return size;}
         inline size_t getWidth() {return width;}
         inline size_t getHeight() {return height;}
+        void cpyArray(Array2D*,size_t=0, size_t=0);
         void callAlgFuncOnEveryElement(std::function<uint_fast8_t(Array2D*,size_t,size_t,size_t,size_t)>);
         void callAlgFuncOnEveryElementUseAux(std::function<uint_fast8_t(Array2D*,size_t,size_t,size_t,size_t)>);
+        void callAlgFuncOnRangeUseAux(std::function<uint_fast8_t(Array2D*,size_t,size_t,size_t,size_t)>, Array2DRange&);
 
 };
 

@@ -153,7 +153,9 @@ void GraphicsContext::decColorToneMultiplier(size_t step) {
 void GraphicsContext::drawInfo() {
     if(ttf_font == nullptr) return;
     //fps
-    uint64_t fps = 1000 / timeTracker.elapsed();
+    uint64_t latency = timeTracker.elapsed();
+    latency = (latency == 0) ? 1 : latency;
+    uint64_t fps = 1000 / latency;
     al_draw_textf(ttf_font, al_map_rgb(255,255,255), 8, 8, 0, "FPS: %ld", fps);
 }
 
