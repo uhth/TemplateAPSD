@@ -4,7 +4,7 @@
 
 #define PATH_TO_FONT "./font/VictorMono-Regular.otf"
 
-#define DIM 200  //size of the matrix
+#define DIM 443  //size of the matrix
 #define COUNTER 10000 //cycles
 
 //cells type
@@ -16,7 +16,6 @@
 
 #define FC_TAG 0 //first column tag ( send )
 #define LC_TAG 1 //last column tag ( send )
-#define PRINT_TAG 2
 #define IM_TAG 3
 #define PROC_COL_TAG 5 //process sends col to master
 

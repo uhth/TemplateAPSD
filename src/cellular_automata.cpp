@@ -17,9 +17,9 @@ uint_fast8_t fractalAlgorithm(Array2D *array2d, size_t row, size_t col, size_t r
     int row_k, col_l;
     int diag = 0;
     for( int k = -1; k <= 1; k++ ) { //rows 0 -1 +1 row
-        row_k = (row + k < 0) ? rowMax - 1 : (row + k >= rowMax) ? 0 : row + k; // also ensures that shall not be comparations between size_t and negative int
+        row_k = (row == 0 && k == - 1) ? rowMax - 1 : (row + k >= rowMax) ? 0 : row + k;
         for( int l = -1; l <= 1; l++ ) { //columns 0 -1 +1  col
-            col_l = (col + l < 0) ? -2 : (col + l >= colMax) ? -2 : col + l; // also ensures that shall not be comparations between size_t and negative int
+            col_l = (col == 0 && l == -1) ? -2 : (col + l >= colMax) ? -2 : col + l;
             if( ( !k && !l ) || col_l == -2) continue;
             if( ( k == -1 || k == 1 ) && ( l == -1 || l == 1 ) ) //diag tiles
                 diag += *(array2d->at( row_k, col_l ));
@@ -55,9 +55,9 @@ uint_fast8_t golAlgorithm(Array2D *array2d, size_t row, size_t col, size_t rowMa
     //vertical scan from -1 to 1
     int row_k, col_l, alive_nb = 0;
     for( int k = -1; k <= 1; k++ ) { //rows 0 -1 +1 Y
-        row_k = (row + k < 0) ? rowMax - 1 : (row + k >= rowMax) ? 0 : row + k;
+        row_k = (row == 0 && k == - 1) ? rowMax - 1 : (row + k >= rowMax) ? 0 : row + k;
         for( int l = -1; l <= 1; l++ ) { //columns 0 -1 +1  X
-            col_l = (col + l < 0) ? -2 : (col + l >= colMax) ? -2 : col + l;
+            col_l = (col == 0 && l == -1) ? -2 : (col + l >= colMax) ? -2 : col + l;
             if((!k && !l)|| col_l == -2) continue;
                 alive_nb += *(array2d->at( row_k, col_l )) & 1;
         }
@@ -103,9 +103,9 @@ uint_fast8_t forestAlgorithm(Array2D *array2d, size_t row, size_t col, size_t ro
     //vertical scan from -1 to 1
     int row_k, col_l, on_fire_nb = 0;
     for( int k = -1; k <= 1; k++ ) { //rows 0 -1 +1 Y
-        row_k = (row + k < 0) ? rowMax - 1 : (row + k >= rowMax) ? 0 : row + k;
+        row_k = (row == 0 && k == - 1) ? rowMax - 1 : (row + k >= rowMax) ? 0 : row + k;
         for( int l = -1; l <= 1; l++ ) { //columns 0 -1 +1  X
-            col_l = (col + l < 0) ? -2 : (col + l >= colMax) ? -2 : col + l;
+            col_l = (col == 0 && l == -1) ? -2 : (col + l >= colMax) ? -2 : col + l;
             if((!k && !l)|| col_l == -2) continue;
                 on_fire_nb += *(array2d->at( row_k, col_l )) == 2 ? 1 : 0;
         }
@@ -148,9 +148,9 @@ uint_fast8_t ecolibraAutomata(Array2D *array2d, size_t row, size_t col, size_t r
 //vertical scan from -1 to 1
     int row_k, col_l, SUM_8 = 0;
     for( int k = -1; k <= 1; k++ ) { //rows 0 -1 +1 row
-        row_k = (row + k < 0) ? rowMax - 1 : (row + k >= rowMax) ? 0 : row + k;
+        row_k = (row == 0 && k == - 1) ? rowMax - 1 : (row + k >= rowMax) ? 0 : row + k;
         for( int l = -1; l <= 1; l++ ) { //columns 0 -1 +1 col
-            col_l = (col + l < 0) ? -2 : (col + l >= colMax) ? -2 : col + l;
+            col_l = (col == 0 && l == -1) ? -2 : (col + l >= colMax) ? -2 : col + l;
             if((!k && !l)|| col_l == -2) continue;
             SUM_8 += *(array2d->at(row_k, col_l)) & 1 ? 1 : 0;
         }
@@ -236,9 +236,9 @@ uint_fast8_t fadersAutomata(Array2D *array2d, size_t row, size_t col, size_t row
     //vertical scan from -1 to 1
     int row_k, col_l, SUM_8 = 0;
     for( int k = -1; k <= 1; k++ ) { //rows 0 -1 +1 row
-        row_k = (row + k < 0) ? rowMax - 1 : (row + k >= rowMax) ? 0 : row + k;
+        row_k = (row == 0 && k == - 1) ? rowMax - 1 : (row + k >= rowMax) ? 0 : row + k;
         for( int l = -1; l <= 1; l++ ) { //columns 0 -1 +1 col
-            col_l = (col + l < 0) ? -2 : (col + l >= colMax) ? -2 : col + l;
+            col_l = (col == 0 && l == -1) ? -2 : (col + l >= colMax) ? -2 : col + l;
             if((!k && !l)|| col_l == -2) continue;
             SUM_8 += *(array2d->at(row_k, col_l)) & 1 ? 1 : 0;
         }

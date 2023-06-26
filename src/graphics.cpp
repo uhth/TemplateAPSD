@@ -108,6 +108,8 @@ void GraphicsContext::calculateVerticesCoords(int y, int x, ALLEGRO_COLOR& color
     float x2 = x1 + cellWidth;
     float y2 = y1 + cellHeight;
 
+    //x1 += PADDING; x2 -= PADDING; y1 += PADDING; y2 -= PADDING;
+
     size_t pos = (x * arrWidth) + y;
 
     vertices[(pos * 6) + 0] = {.x=x1, .y=y1, .z=0, .u=0, .v=0, .color=color};
@@ -154,7 +156,7 @@ void GraphicsContext::drawInfo() {
     if(ttf_font == nullptr) return;
     //fps
     uint64_t latency = timeTracker.elapsed();
-    latency = (latency == 0) ? 1 : latency;
+    if (latency < 1) return;
     uint64_t fps = 1000 / latency;
     al_draw_textf(ttf_font, al_map_rgb(255,255,255), 8, 8, 0, "FPS: %ld", fps);
 }

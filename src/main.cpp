@@ -29,11 +29,13 @@ int main(int argc, char *argv[]) {
 	/* PROCESS EXECUTION FLOW */
 	if(mpiWrapper.my_id != 0) {
 		mpiWrapper.recvInitialArray(procArray2d.get());
+		//loop
 		while(1) {
 			EVENT event = mpiWrapper.syncEvents();
 			if(!handleEventProc(event, automatas, mpiWrapper, procArray2d, currentAutomata)) break;
 			mpiWrapper.ProcessAndSyncProcArray2d(procArray2d.get(), automatas[currentAutomata]->getAlgorithmFunc());
 			mpiWrapper.sendProcArray(procArray2d.get());
+			mpiWrapper.syncToBarrier();
 		}
 	}
 
@@ -43,7 +45,6 @@ int main(int argc, char *argv[]) {
 		graphics.init();
 		std::unique_ptr<Array2D> masterArray2d;
 		handleEventMaster(EVENT::RESET, automatas, graphics, mpiWrapper, masterArray2d, procArray2d, currentAutomata);
-		mpiWrapper.sendInitialArray(masterArray2d.get(), procArray2d.get());
 		//loop
 		while(1) {
 			EVENT event = graphics.popFromEventQueue();
@@ -58,6 +59,7 @@ int main(int argc, char *argv[]) {
 			graphics.printOnScreen(masterArray2d.get());
 			//sleep
 			std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
+			mpiWrapper.syncToBarrier();
 		}
 		graphics.exit();
 	}
@@ -87,7 +89,7 @@ bool handleEventMaster(EVENT event, std::vector<std::unique_ptr<Automata>>& auto
 			mpiWrapper.sendInitialArray(masterArray2d.get(), procArray2d.get());
 			break;
 		case EVENT::PREVIOUS:
-			currentAutomata = (currentAutomata - 1 >= 0) ? currentAutomata - 1 : automatas.size() - 1;
+			currentAutomata = (currentAutomata == 0) ? automatas.size() - 1 : currentAutomata - 1;
 			masterArray2d = automatas[currentAutomata]->generateUniqueArray(DIM);
 			graphics.setColorToneMultiplier(automatas[currentAutomata]->getColorToneMultiplier());
 			mpiWrapper.sendInitialArray(masterArray2d.get(), procArray2d.get());
@@ -120,7 +122,7 @@ bool handleEventProc(EVENT event, std::vector<std::unique_ptr<Automata>>& automa
 			mpiWrapper.recvInitialArray(procArray2d.get());
 			break;
 		case EVENT::PREVIOUS:
-			currentAutomata = (currentAutomata - 1 >= 0) ? currentAutomata - 1 : automatas.size() - 1;
+			currentAutomata = (currentAutomata == 0) ? automatas.size() - 1 : currentAutomata - 1;
 			mpiWrapper.recvInitialArray(procArray2d.get());
 			break;
 	};
