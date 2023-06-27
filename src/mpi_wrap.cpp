@@ -29,7 +29,7 @@ void MpiWrapper::sendInitialArray(Array2D *masterArray2d, Array2D *procArray2d) 
 	for( int proc = 1; proc < num_procs; ++proc) {
 		int start_col = (cols_to_send * proc) + surplus_cols;
 		for( int p_col = 0, m_col = start_col; p_col < cols_to_send; ++p_col, ++m_col)
-			MPI_Send( masterArray2d->col(m_col), 1, masterArrayColType, proc, IM_TAG, MPI_COMM_WORLD );
+			MPI_Send( masterArray2d->col(m_col), 1, masterArrayColType, proc, IA_TAG, MPI_COMM_WORLD );
 	}
 	
 	syncToBarrier();
@@ -38,7 +38,7 @@ void MpiWrapper::sendInitialArray(Array2D *masterArray2d, Array2D *procArray2d) 
 void MpiWrapper::recvInitialArray(Array2D *procArray2d) {
 	procArray2d->clearAll();
     for(int p_col = 1; p_col < num_cols - 1; ++p_col) {
-		MPI_Recv( procArray2d->col(p_col), 1, procArrayColType, 0, IM_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv( procArray2d->col(p_col), 1, procArrayColType, 0, IA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	syncToBarrier();
 }
