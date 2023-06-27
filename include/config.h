@@ -4,7 +4,7 @@
 
 #define PATH_TO_FONT "./font/VictorMono-Regular.otf"
 
-#define DIM 400  //size of the matrix
+#define DIM 600  //size of the matrix
 
 //mpi tags
 #define FC_TAG 0 //first column tag ( send )
@@ -23,7 +23,7 @@
 
 //FOREST
 #define P_ZAPP 1
-#define P_TREE 50
+#define P_TREE 40
 
 #endif
 
