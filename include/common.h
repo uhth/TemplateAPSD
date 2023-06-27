@@ -4,7 +4,7 @@
 #include <cstdint>
 
 enum EVENT : uint_fast8_t {
-    EXIT, NONE, RESET, NEXT, PREVIOUS
+    EXIT, PAUSE, NONE, RESET, NEXT, PREVIOUS
 };
 
 #endif

@@ -47,6 +47,9 @@ void* eventHandler( ALLEGRO_THREAD *thread, void *arg ) {
                 case ALLEGRO_KEY_DOWN :
                     graphicsContext->decColorToneMultiplier(10);
 					break;
+                case ALLEGRO_KEY_ENTER :
+                    graphicsContext->pushToEventQueue(PAUSE);
+					break;
 			}
 		}
 	}
@@ -79,23 +82,22 @@ void GraphicsContext::exit() {
 }
 
 void GraphicsContext::pushToEventQueue(EVENT event) {
-    mutex.lock();
+    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     eventQueue.push(event);
-    mutex.unlock();
 }
 
 EVENT GraphicsContext::popFromEventQueue() {
+    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     EVENT event = NONE;
-    mutex.lock();
     if (!eventQueue.empty()) {
         event = eventQueue.front();
         eventQueue.pop();
     }
-    mutex.unlock();
     return event;
 }
 
 void GraphicsContext::calculateCellSize() {
+    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     float displayWidth = al_get_display_width(display);
     float displayHeight = al_get_display_height(display);
     cellWidth = (displayWidth / arrWidth);
@@ -103,6 +105,7 @@ void GraphicsContext::calculateCellSize() {
 }
 
 void GraphicsContext::calculateVerticesCoords(int y, int x, ALLEGRO_COLOR& color) {
+    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     float x1 = x * cellWidth;
     float y1 = y * cellHeight;
     float x2 = x1 + cellWidth;
@@ -123,6 +126,7 @@ void GraphicsContext::calculateVerticesCoords(int y, int x, ALLEGRO_COLOR& color
 
 
 void GraphicsContext::printOnScreen(Array2D* array2d) {
+    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     al_clear_to_color(al_map_rgb(0,0,0));
     for(size_t row = 0; row < array2d->getHeight(); ++row) {
         for(size_t col = 0; col < array2d->getWidth(); ++col) {
@@ -137,22 +141,20 @@ void GraphicsContext::printOnScreen(Array2D* array2d) {
 }
 
 void GraphicsContext::setColorToneMultiplier(uint_fast8_t ctm) {
-    mutex.lock();
+    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     colorToneMultiplier = ctm;
-    mutex.unlock();
 }
 
 void GraphicsContext::incColorToneMultiplier(size_t step) {
-    mutex.lock();
+    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     colorToneMultiplier += step;
-    mutex.unlock();
 }
 void GraphicsContext::decColorToneMultiplier(size_t step) {
-    mutex.lock();
+    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     colorToneMultiplier -= step;
-    mutex.unlock();
 }
 void GraphicsContext::drawInfo() {
+    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     if(ttf_font == nullptr) return;
     //fps
     uint64_t latency = timeTracker.elapsed();
@@ -162,6 +164,7 @@ void GraphicsContext::drawInfo() {
 }
 
 uint64_t TimeTracker::elapsed() {
+    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     uint64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     uint64_t diff = now - lastStoredTime;
     lastStoredTime = now;

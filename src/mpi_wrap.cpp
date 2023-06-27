@@ -19,15 +19,18 @@ void MpiWrapper::init(int &argc, char** argv) {
 void MpiWrapper::sendInitialArray(Array2D *masterArray2d, Array2D *procArray2d) {
 	if(my_id != 0) return;
 	procArray2d->clearAll();
-	for(int row = 0; row < arrayHeight; ++row)
-		for(int p_col = 1, m_col = 0; p_col < num_cols - 1; ++m_col, ++p_col)
-			*procArray2d->at(row, p_col) = *masterArray2d->at(row, m_col);
 
 	int cols_to_send = arrayWidth / num_procs;
 
-	for( int proc = 1; proc < num_procs; ++proc)
-		for( int p_col = 0, m_col = (cols_to_send * proc) + surplus_cols; p_col < cols_to_send; ++p_col, ++m_col)
+	for(int row = 0; row < arrayHeight; ++row)
+		for(int p_col = 1, m_col = 0; m_col < cols_to_send + surplus_cols; ++m_col, ++p_col)
+			*procArray2d->at(row, p_col) = *masterArray2d->at(row, m_col);
+	
+	for( int proc = 1; proc < num_procs; ++proc) {
+		int start_col = (cols_to_send * proc) + surplus_cols;
+		for( int p_col = 0, m_col = start_col; p_col < cols_to_send; ++p_col, ++m_col)
 			MPI_Send( masterArray2d->col(m_col), 1, masterArrayColType, proc, IM_TAG, MPI_COMM_WORLD );
+	}
 	
 	syncToBarrier();
 }
@@ -44,25 +47,23 @@ void MpiWrapper::ProcessAndSyncProcArray2d(Array2D *procArray2d, std::function<u
 	procArray2d->clearAuxArray();
 	
 	MPI_Request lastCol, firstCol;
-	Array2DRange firstColRange = {.startRow = 0, .endRow = arrayHeight, .startCol = 1, .endCol = 2, .rowBoundary = arrayHeight, .colBoundary = num_cols};
-	Array2DRange lastColRange = {.startRow = 0, .endRow = arrayHeight, .startCol = num_cols - 2, .endCol = num_cols, .rowBoundary = arrayHeight, .colBoundary = num_cols};
 	Array2DRange centerColRange = {.startRow = 0, .endRow = arrayHeight, .startCol = 2, .endCol = num_cols - 2, .rowBoundary = arrayHeight, .colBoundary = num_cols};
+	Array2DRange firstColRange = {.startRow = 0, .endRow = arrayHeight, .startCol = 1, .endCol = 2, .rowBoundary = arrayHeight, .colBoundary = num_cols};
+	Array2DRange lastColRange = {.startRow = 0, .endRow = arrayHeight, .startCol = num_cols - 2, .endCol = num_cols - 1, .rowBoundary = arrayHeight, .colBoundary = num_cols};
 
+	int previous_proc = (my_id - 1 >= 0) ? my_id - 1 : num_procs - 1;
+	int next_proc = (my_id + 1) % num_procs;
 	//receive MY first-- col from previous process
-	int first_col_sender = (my_id - 1 >= 0) ? my_id - 1 : num_procs - 1;
-	MPI_Irecv(procArray2d->col(0), 1, procArrayColType, first_col_sender, LC_TAG, MPI_COMM_WORLD, &firstCol);
+	MPI_Irecv(procArray2d->col(0), 1, procArrayColType, previous_proc, LC_TAG, MPI_COMM_WORLD, &firstCol);
 	
 	//receive MY last++ col from next process
-	int last_col_sender = (my_id + 1 < num_procs) ? my_id + 1 : 0;
-	MPI_Irecv(procArray2d->col(num_cols - 1), 1, procArrayColType, last_col_sender, FC_TAG, MPI_COMM_WORLD, &lastCol);
+	MPI_Irecv(procArray2d->col(num_cols - 1), 1, procArrayColType, next_proc, FC_TAG, MPI_COMM_WORLD, &lastCol);
 
 	//send MY last col to next process
-	int last_col_receiver = (my_id + 1 < num_procs) ? my_id + 1 : 0;
-	MPI_Send(procArray2d->col(num_cols - 2), 1, procArrayColType, last_col_receiver, LC_TAG, MPI_COMM_WORLD);
+	MPI_Send(procArray2d->col(num_cols - 2), 1, procArrayColType, next_proc, LC_TAG, MPI_COMM_WORLD);
 	
 	//send MY first col to previous process
-	int first_col_receiver = (my_id - 1 >= 0) ? my_id - 1 : num_procs - 1;
-	MPI_Send(procArray2d->col(1), 1, procArrayColType, first_col_receiver, FC_TAG, MPI_COMM_WORLD);
+	MPI_Send(procArray2d->col(1), 1, procArrayColType, previous_proc, FC_TAG, MPI_COMM_WORLD);
 
 	//computing center col
 	procArray2d->callAlgFuncOnRangeUseAux(func, centerColRange);
@@ -70,7 +71,7 @@ void MpiWrapper::ProcessAndSyncProcArray2d(Array2D *procArray2d, std::function<u
 	//computing first col
 	MPI_Wait( &firstCol, MPI_STATUS_IGNORE );
 	procArray2d->callAlgFuncOnRangeUseAux(func, firstColRange);
-		
+
 	//computing last col
 	MPI_Wait( &lastCol, MPI_STATUS_IGNORE );
 	procArray2d->callAlgFuncOnRangeUseAux(func, lastColRange);

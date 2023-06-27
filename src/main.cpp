@@ -12,6 +12,8 @@ bool handleEventMaster(EVENT,std::vector<std::unique_ptr<Automata>>&,GraphicsCon
 bool handleEventProc(EVENT,std::vector<std::unique_ptr<Automata>>&,MpiWrapper&,std::unique_ptr<Array2D>&,size_t&);
 void initAutomatas(std::vector<std::unique_ptr<Automata>>&);
 
+bool paused = false;
+
 int main(int argc, char *argv[]) {
 	// Mpi init
 	MpiWrapper mpiWrapper(DIM,DIM);
@@ -33,6 +35,7 @@ int main(int argc, char *argv[]) {
 		while(1) {
 			EVENT event = mpiWrapper.syncEvents();
 			if(!handleEventProc(event, automatas, mpiWrapper, procArray2d, currentAutomata)) break;
+			if(paused) continue;
 			mpiWrapper.ProcessAndSyncProcArray2d(procArray2d.get(), automatas[currentAutomata]->getAlgorithmFunc());
 			mpiWrapper.sendProcArray(procArray2d.get());
 			mpiWrapper.syncToBarrier();
@@ -51,6 +54,7 @@ int main(int argc, char *argv[]) {
 			mpiWrapper.syncEvents(event);
 			if(!handleEventMaster(event, automatas, graphics, mpiWrapper, masterArray2d, procArray2d, currentAutomata)) break;
 			//logic
+			if(paused) continue;
 			mpiWrapper.ProcessAndSyncProcArray2d(procArray2d.get(), automatas[currentAutomata]->getAlgorithmFunc());
 			masterArray2d->clearArray();
 			mpiWrapper.recvProcArray(masterArray2d.get());
@@ -75,6 +79,9 @@ bool handleEventMaster(EVENT event, std::vector<std::unique_ptr<Automata>>& auto
 	switch(event) {
 		case EVENT::EXIT:
 			return false;
+		case EVENT::PAUSE:
+			paused = !paused;
+			break;
 		case EVENT::NONE:
 			break;
 		case EVENT::RESET:
@@ -112,6 +119,9 @@ bool handleEventProc(EVENT event, std::vector<std::unique_ptr<Automata>>& automa
 	switch(event) {
 		case EVENT::EXIT:
 			return false;
+		case EVENT::PAUSE:
+			paused = !paused;
+			break;
 		case EVENT::NONE:
 			break;
 		case EVENT::RESET:

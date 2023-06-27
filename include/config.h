@@ -4,7 +4,7 @@
 
 #define PATH_TO_FONT "./font/VictorMono-Regular.otf"
 
-#define DIM 443  //size of the matrix
+#define DIM 400  //size of the matrix
 #define COUNTER 10000 //cycles
 
 //cells type

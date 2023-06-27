@@ -15,6 +15,7 @@
 
 class TimeTracker {
     private:
+        std::recursive_mutex r_mutex;
         uint64_t lastStoredTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     public:
         uint64_t elapsed();
@@ -27,7 +28,7 @@ class GraphicsContext {
         ALLEGRO_BITMAP *backBuffer;
         ALLEGRO_THREAD *thread;
         ALLEGRO_VERTEX *vertices;
-        std::mutex mutex;
+        std::recursive_mutex r_mutex;
         std::queue<EVENT> eventQueue; //Non-blocking shared res
         uint_fast8_t colorToneMultiplier = 1;
         TimeTracker timeTracker;
