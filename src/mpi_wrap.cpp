@@ -7,11 +7,11 @@ void MpiWrapper::init(int &argc, char** argv) {
     //2 ecoltra columns are needed to store first-- and last++
     num_cols = (arrayWidth / num_procs) + 2;
 	surplus_cols = arrayWidth % num_procs;
+	//giving 0 any extra columns
+	if(my_id == 0) num_cols += surplus_cols;
     //custom datatypes
     MPI_Type_vector(arrayHeight, 1, num_cols, MPI_UINT8_T, &procArrayColType);
 	MPI_Type_commit(&procArrayColType);
-	//giving 0 any extra columns
-	if(my_id == 0) num_cols += surplus_cols;
     MPI_Type_vector(arrayHeight, 1, arrayWidth, MPI_UINT8_T, &masterArrayColType);
 	MPI_Type_commit(&masterArrayColType);
 }

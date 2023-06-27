@@ -13,6 +13,12 @@
 #include "config.h"
 #include "common.h"
 
+/* 
+    BE AWARE THAT THIS CLASS IS NOT GUARANTEED TO BE THREAD SAFE
+    THE ONLY PURPOSE OF THE LOCKING MECHANISM PROVIDED IS TO PREVENT 
+    RACE CONDITIONS CAUSED BY ITS EMBEDDED ALLEGO-THREAD
+*/
+
 class TimeTracker {
     private:
         std::recursive_mutex r_mutex;
