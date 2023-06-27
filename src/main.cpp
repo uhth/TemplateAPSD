@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
 
 	/* MASTER EXECUTION FLOW */
 	if(mpiWrapper.my_id == 0) {
+		long startTime = MPI_Wtime();
 		GraphicsContext graphics(DIM, DIM);
 		graphics.init();
 		std::unique_ptr<Array2D> masterArray2d;
@@ -66,6 +67,8 @@ int main(int argc, char *argv[]) {
 			mpiWrapper.syncToBarrier();
 		}
 		graphics.exit();
+	long elapsedTime = MPI_Wtime() - startTime;
+	std::cout << "Elapsed Time: " << elapsedTime << " seconds" << std::endl;
 	}
 
 	mpiWrapper.exit();
