@@ -1,16 +1,16 @@
 # TemplateAPSD
 
 <p>
-Use make to compile
+Use make to compile<br>
 ./main.out ot execute without mpi
-
+<br>
 *allegro5 and openmpi needed*
 </p>
-
+<br>
 <p>
-Commands:
-ESC - QUIT
-R - RESET
-LEFT/RIGHT ARROW - PREVIOUS/NEXT AUTOMATA
+Commands: <br>
+ESC - QUIT <br>
+R - RESET <br>
+LEFT/RIGHT ARROW - PREVIOUS/NEXT AUTOMATA <br>
 UP/DOWN ARROW - CHANGE COLOR
 </p>
