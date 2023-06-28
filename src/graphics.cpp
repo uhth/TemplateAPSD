@@ -42,10 +42,16 @@ void* eventHandler( ALLEGRO_THREAD *thread, void *arg ) {
                     graphicsContext->pushToEventQueue(RESET);
 					break;
                 case ALLEGRO_KEY_UP :
-                    graphicsContext->incColorToneMultiplier(10);
+                    if(event.keyboard.modifiers == ALLEGRO_KEYMOD_CTRL)
+                        graphicsContext->incColorToneMultiplier();
+                    else
+                        graphicsContext->incColorToneMultiplier(10);
 					break;
                 case ALLEGRO_KEY_DOWN :
-                    graphicsContext->decColorToneMultiplier(10);
+                    if(event.keyboard.modifiers == ALLEGRO_KEYMOD_CTRL)
+                        graphicsContext->decColorToneMultiplier();
+                    else
+                        graphicsContext->decColorToneMultiplier(10);
 					break;
                 case ALLEGRO_KEY_ENTER :
                     graphicsContext->pushToEventQueue(PAUSE);
@@ -131,7 +137,9 @@ void GraphicsContext::printOnScreen(Array2D* array2d) {
     for(size_t row = 0; row < array2d->getHeight(); ++row) {
         for(size_t col = 0; col < array2d->getWidth(); ++col) {
             uint_fast8_t value = *array2d->at(row, col);
-            ALLEGRO_COLOR color = (value == 0) ? al_map_rgb(0,0,0) : al_color_hsl(value * colorToneMultiplier, 0.8f, 0.5f);
+            ALLEGRO_COLOR color = al_map_rgb(0,0,0);
+            if(!colorMask.count(value))
+                color = al_color_hsl(value * colorToneMultiplier, 0.8f, 0.5f);
             calculateVerticesCoords(row, col, color);
         }
     }
@@ -152,6 +160,10 @@ void GraphicsContext::incColorToneMultiplier(size_t step) {
 void GraphicsContext::decColorToneMultiplier(size_t step) {
     std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     colorToneMultiplier -= step;
+}
+uint_fast8_t GraphicsContext::getColorToneMultiplier() {
+    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
+    return colorToneMultiplier;
 }
 void GraphicsContext::drawInfo() {
     std::scoped_lock<std::recursive_mutex> lock(r_mutex);

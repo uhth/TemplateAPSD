@@ -31,9 +31,14 @@ void Array2D::clearAll() {
 }
 
 void Array2D::swap() {
+    for(auto &override : overrideMap) {
+        size_t row = override.first.row, col = override.first.col;
+        *atAux(row, col) = override.second;
+    }
     uint_fast8_t *temp = array;
     array = auxArray;
     auxArray = temp;
+    overrideMap.clear();
 }
 
 void Array2D::cpyArray(Array2D* src, size_t l_offset, size_t r_offset) {

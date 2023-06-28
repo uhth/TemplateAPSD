@@ -10,7 +10,7 @@
 
 bool handleEventMaster(EVENT,std::vector<std::unique_ptr<Automata>>&,GraphicsContext&,MpiWrapper&,std::unique_ptr<Array2D>&,std::unique_ptr<Array2D>&,size_t&);
 bool handleEventProc(EVENT,std::vector<std::unique_ptr<Automata>>&,MpiWrapper&,std::unique_ptr<Array2D>&,size_t&);
-void initAutomatas(std::vector<std::unique_ptr<Automata>>&);
+void initAutomatas(std::vector<std::unique_ptr<Automata>>&,MpiWrapper&);
 
 bool paused = false;
 
@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 	size_t currentAutomata = 0;
 	
 	// Common Inits
-	initAutomatas(automatas);
+	initAutomatas(automatas, mpiWrapper);
 
 
 	/* PROCESS EXECUTION FLOW */
@@ -91,30 +91,43 @@ bool handleEventMaster(EVENT event, std::vector<std::unique_ptr<Automata>>& auto
 		case EVENT::RESET:
 			masterArray2d = automatas[currentAutomata]->generateUniqueArray(DIM);
 			graphics.setColorToneMultiplier(automatas[currentAutomata]->getColorToneMultiplier());
+			graphics.setColorMask(automatas[currentAutomata]->getMasquedValues());
 			mpiWrapper.sendInitialArray(masterArray2d.get(), procArray2d.get());
 			break;
 		case EVENT::NEXT:
 			currentAutomata = (currentAutomata + 1) % automatas.size();
 			masterArray2d = automatas[currentAutomata]->generateUniqueArray(DIM);
 			graphics.setColorToneMultiplier(automatas[currentAutomata]->getColorToneMultiplier());
+			graphics.setColorMask(automatas[currentAutomata]->getMasquedValues());
 			mpiWrapper.sendInitialArray(masterArray2d.get(), procArray2d.get());
 			break;
 		case EVENT::PREVIOUS:
 			currentAutomata = (currentAutomata == 0) ? automatas.size() - 1 : currentAutomata - 1;
 			masterArray2d = automatas[currentAutomata]->generateUniqueArray(DIM);
 			graphics.setColorToneMultiplier(automatas[currentAutomata]->getColorToneMultiplier());
+			graphics.setColorMask(automatas[currentAutomata]->getMasquedValues());
 			mpiWrapper.sendInitialArray(masterArray2d.get(), procArray2d.get());
 			break;
 	};
 	return true;
 }
 
-void initAutomatas(std::vector<std::unique_ptr<Automata>>& automatas) {
+void initAutomatas(std::vector<std::unique_ptr<Automata>>& automatas, MpiWrapper& mpiWrapper) {
+	
 	automatas.push_back(std::make_unique<AutomataEcoLibra>());
-	automatas.push_back(std::make_unique<AutomataGoL>());
+	automatas.push_back(std::make_unique<AutomataGOL>());
 	automatas.push_back(std::make_unique<AutomataForest>());
 	automatas.push_back(std::make_unique<AutomataFaders>());
 	automatas.push_back(std::make_unique<AutomataFractal>());
+	automatas.push_back(std::make_unique<AutomataDLA>());
+
+	if(mpiWrapper.num_procs == 1) return;
+	auto it = automatas.begin();
+	for(; it < automatas.end(); ++it) {
+		if(!(*it)->canMultiProcess())
+			automatas.erase(it);
+	}
+
 }
 
 

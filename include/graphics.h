@@ -8,6 +8,7 @@
 #include <allegro5/allegro_ttf.h>
 #include <mutex>
 #include <queue>
+#include <map>
 
 #include "uint8_array2d.h"
 #include "config.h"
@@ -43,6 +44,7 @@ class GraphicsContext {
         size_t arrWidth;
         size_t arrHeight;
         size_t nVertices;
+        std::unordered_map<uint_fast8_t, bool> colorMask;
     protected:
         void calculateVerticesCoords(int,int,ALLEGRO_COLOR&);
         void calculateCellSize();
@@ -52,14 +54,14 @@ class GraphicsContext {
         void exit();
         void printOnScreen(Array2D*);
         void setColorToneMultiplier(uint_fast8_t);
+        inline void setColorMask(std::unordered_map<uint_fast8_t, bool> colorMaskIn) { colorMask = colorMaskIn; };
         void incColorToneMultiplier(size_t=1);
         void decColorToneMultiplier(size_t=1);
+        uint_fast8_t getColorToneMultiplier();
         void pushToEventQueue(EVENT);
         void drawInfo();
         EVENT popFromEventQueue();
         ~GraphicsContext() { delete[] vertices; }
-
-        std::function<void(int,int,uint_fast8_t,uint_fast8_t)> getPrintFunc();
         friend void* eventHandler(ALLEGRO_THREAD *thread, void *arg);
         
 };
