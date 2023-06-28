@@ -63,7 +63,8 @@ int main(int argc, char *argv[]) {
 			//graphics
 			graphics.printOnScreen(masterArray2d.get());
 			//sleep
-			std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
+			if(SLEEP_TIME > 0)
+				std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
 			mpiWrapper.syncToBarrier();
 		}
 		graphics.exit();
