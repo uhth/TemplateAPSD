@@ -8,6 +8,7 @@ MPI_LINK_FLAGS := $(shell mpicxx --showme:link)
 
 LDFLAGS += $(MPI_LINK_FLAGS)
 CXXFLAGS += $(MPI_COMPILE_FLAGS)
+OPTFLAG += -O2
 
 SRC_DIR := src
 OBJ_DIR := obj
@@ -15,9 +16,12 @@ SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
 
 main.out: $(OBJ_FILES)
-	$(CXX) $(LDFLAGS) -o $@ $^
+	$(CXX) $(LDFLAGS) $(OPTFLAG) -o $@ $^
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(OPTFLAG) -c -o $@ $<
+
+clean:
+	rm -rf ${OBJ_FILES}
 
 -include $(OBJ_FILES:.o=.d)
