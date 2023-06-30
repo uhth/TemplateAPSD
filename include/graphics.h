@@ -32,7 +32,6 @@ class GraphicsContext {
     private:
         ALLEGRO_FONT *ttf_font;
         ALLEGRO_DISPLAY *display;
-        ALLEGRO_BITMAP *backBuffer;
         ALLEGRO_THREAD *thread;
         ALLEGRO_VERTEX *vertices;
         std::recursive_mutex r_mutex;
@@ -43,13 +42,12 @@ class GraphicsContext {
         float cellHeight;
         size_t arrWidth;
         size_t arrHeight;
-        size_t nVertices;
         std::unordered_map<uint_fast8_t, bool> colorMask;
     protected:
-        void calculateVerticesCoords(int,int,ALLEGRO_COLOR&);
+        void calculateVerticesCoords(int,int,size_t,ALLEGRO_COLOR&);
         void calculateCellSize();
     public:
-        GraphicsContext(size_t arrWidthIn, size_t arrHeightIn) : arrWidth(arrWidthIn), arrHeight(arrHeightIn), nVertices(arrWidthIn * arrHeightIn * 6) { vertices = new ALLEGRO_VERTEX[nVertices]; }
+        GraphicsContext(size_t arrWidthIn, size_t arrHeightIn) : arrWidth(arrWidthIn), arrHeight(arrHeightIn) { vertices = new ALLEGRO_VERTEX[arrWidthIn * arrHeightIn * 6]; }
         void init();
         void exit();
         void printOnScreen(Array2D*);

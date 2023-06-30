@@ -75,7 +75,6 @@ void GraphicsContext::init() {
 	if (display == nullptr)
         throw std::runtime_error("Graphics: Display failed to initialize");
     //resize stuff
-    backBuffer = al_get_backbuffer(display);
     calculateCellSize();
     //thread
     thread = al_create_thread(eventHandler, this);
@@ -110,7 +109,7 @@ void GraphicsContext::calculateCellSize() {
     cellHeight = (displayHeight / arrHeight);
 }
 
-void GraphicsContext::calculateVerticesCoords(int y, int x, ALLEGRO_COLOR& color) {
+void GraphicsContext::calculateVerticesCoords(int y, int x, size_t lastIndex, ALLEGRO_COLOR& color) {
     std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     float x1 = x * cellWidth;
     float y1 = y * cellHeight;
@@ -119,14 +118,12 @@ void GraphicsContext::calculateVerticesCoords(int y, int x, ALLEGRO_COLOR& color
 
     //x1 += PADDING; x2 -= PADDING; y1 += PADDING; y2 -= PADDING;
 
-    size_t pos = (x * arrWidth) + y;
-
-    vertices[(pos * 6) + 0] = {.x=x1, .y=y1, .z=0, .u=0, .v=0, .color=color};
-    vertices[(pos * 6) + 1] = {.x=x1, .y=y2, .z=0, .u=0, .v=0, .color=color};
-    vertices[(pos * 6) + 2] = {.x=x2, .y=y2, .z=0, .u=0, .v=0, .color=color};
-    vertices[(pos * 6) + 3] = {.x=x1, .y=y1, .z=0, .u=0, .v=0, .color=color};
-    vertices[(pos * 6) + 4] = {.x=x2, .y=y1, .z=0, .u=0, .v=0, .color=color};
-    vertices[(pos * 6) + 5] = {.x=x2, .y=y2, .z=0, .u=0, .v=0, .color=color};
+    vertices[lastIndex + 0] = {.x=x1, .y=y1, .z=0, .u=0, .v=0, .color=color};
+    vertices[lastIndex + 1] = {.x=x1, .y=y2, .z=0, .u=0, .v=0, .color=color};
+    vertices[lastIndex + 2] = {.x=x2, .y=y2, .z=0, .u=0, .v=0, .color=color};
+    vertices[lastIndex + 3] = {.x=x1, .y=y1, .z=0, .u=0, .v=0, .color=color};
+    vertices[lastIndex + 4] = {.x=x2, .y=y1, .z=0, .u=0, .v=0, .color=color};
+    vertices[lastIndex + 5] = {.x=x2, .y=y2, .z=0, .u=0, .v=0, .color=color};
     
 }        
 
@@ -134,16 +131,18 @@ void GraphicsContext::calculateVerticesCoords(int y, int x, ALLEGRO_COLOR& color
 void GraphicsContext::printOnScreen(Array2D* array2d) {
     std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     al_clear_to_color(al_map_rgb(0,0,0));
+    size_t nCalculatedVectices = 0;
     for(size_t row = 0; row < array2d->getHeight(); ++row) {
         for(size_t col = 0; col < array2d->getWidth(); ++col) {
             uint_fast8_t value = *array2d->at(row, col);
-            ALLEGRO_COLOR color = al_map_rgb(0,0,0);
-            if(!colorMask.count(value))
-                color = al_color_hsl(value * colorToneMultiplier, 0.8f, 0.5f);
-            calculateVerticesCoords(row, col, color);
+            if(!colorMask.count(value)) {
+                ALLEGRO_COLOR color = al_color_hsl(value * colorToneMultiplier, 0.8f, 0.5f);
+                calculateVerticesCoords(row, col, nCalculatedVectices, color);
+                nCalculatedVectices += 6;
+            }
         }
     }
-    al_draw_prim(vertices, NULL, 0, 0, nVertices, ALLEGRO_PRIM_TRIANGLE_LIST);
+    al_draw_prim(vertices, NULL, 0, 0, nCalculatedVectices, ALLEGRO_PRIM_TRIANGLE_LIST);
     drawInfo();
     al_flip_display();
 }

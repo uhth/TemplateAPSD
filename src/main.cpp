@@ -118,6 +118,7 @@ void initAutomatas(std::vector<std::unique_ptr<Automata>>& automatas, MpiWrapper
 	automatas.push_back(std::make_unique<AutomataGOL>());
 	automatas.push_back(std::make_unique<AutomataForest>());
 	automatas.push_back(std::make_unique<AutomataFaders>());
+	automatas.push_back(std::make_unique<AutomataRainzha>());
 	automatas.push_back(std::make_unique<AutomataFractal>());
 	automatas.push_back(std::make_unique<AutomataDLA>());
 

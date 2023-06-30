@@ -293,6 +293,56 @@ std::unique_ptr<Array2D> AutomataFaders::generateUniqueArray(const size_t& size)
     return array2d;
 }
 
+/* RAINZHA */
+uint_fast8_t rainzhaAlgorithm(Array2D *array2d, size_t row, size_t col, size_t rowMax, size_t colMax) {
+    //vertical scan from -1 to 1
+    int row_k, col_l, SUM_8 = 0;
+    for( int k = -1; k <= 1; k++ ) { //rows 0 -1 +1 row
+        row_k = (row == 0 && k == - 1) ? rowMax - 1 : (row + k >= rowMax) ? 0 : row + k;
+        for( int l = -1; l <= 1; l++ ) { //columns 0 -1 +1 col
+            col_l = (col == 0 && l == -1) ? -2 : (col + l >= colMax) ? -2 : col + l;
+            if((!k && !l)|| col_l == -2) continue;
+            SUM_8 += *(array2d->at(row_k, col_l)) & 1 ? 1 : 0;
+        }
+    }
+    //edit this to change AC behaviour
+    
+    uint_fast8_t N = 8, L = 2, U = 3, K = 2, Y = 2;
+    
+    uint_fast8_t self = *(array2d->at(row, col));
+    uint_fast8_t newSelf = 0;
+    
+    if ((self == 0) && (L <= SUM_8) && (SUM_8 <= U)) {
+        newSelf = 1;
+    }
+    if (self == 1) {
+        if ((K <= SUM_8) && (SUM_8 <= Y)) {
+            newSelf = 1;
+        } else {
+            newSelf = 2;
+        }
+    }
+    if (((self & 1) == 0) && (0 < self) && (self < (2 * N))) {
+        newSelf = self + 2;
+    }		
+    return newSelf;
+}
+
+
+std::function<uint_fast8_t(Array2D  *array2d, size_t row, size_t col, size_t rowMax, size_t colMax)> AutomataRainzha::getAlgorithmFunc() {
+    std::function<uint_fast8_t(Array2D*,size_t,size_t,size_t,size_t)> algorithm = rainzhaAlgorithm;
+    return algorithm;
+}
+
+uint_fast8_t AutomataRainzha::getColorToneMultiplier() {
+    return 9;
+}
+
+std::unique_ptr<Array2D> AutomataRainzha::generateUniqueArray(const size_t& size) {
+    std::unique_ptr<Array2D> array2d = std::make_unique<Array2D>(size, size);;
+    return array2d;
+}
+
 /* DIFFUSION-LIMITED AGGREGATION */
 /*
 (i) Select an integer q which is one of 2, 4, 8 or 64. Cells may be in any of the states 1 through q. Cells are either "fixed" or "mobile".

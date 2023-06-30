@@ -1,5 +1,5 @@
-#ifndef CELLULAR_AUTOMAtaTAS_H
-#define CELLULAR_AUTOMAtaTAS_H
+#ifndef CELLULAR_AUTOMATA_H
+#define CELLULAR_AUTOMATA_H
 
 #include <cstdint>
 #include <cstddef>
@@ -54,6 +54,13 @@ class AutomataFaders : public Automata {
         std::unique_ptr<Array2D> generateUniqueArray(const size_t&) override;
         uint_fast8_t getColorToneMultiplier();
         std::string name() override { return "Faders"; }
+};
+class AutomataRainzha : public Automata {
+    public:
+        std::function<uint_fast8_t(Array2D*,size_t,size_t,size_t,size_t)> getAlgorithmFunc();
+        std::unique_ptr<Array2D> generateUniqueArray(const size_t&) override;
+        uint_fast8_t getColorToneMultiplier();
+        std::string name() override { return "Rainzha"; }
 };
 class AutomataDLA : public Automata {
     public:
