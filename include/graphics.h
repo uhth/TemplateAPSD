@@ -12,13 +12,8 @@
 
 #include "uint8_array2d.h"
 #include "config.h"
-#include "common.h"
+#include "event.h"
 
-/* 
-    BE AWARE THAT THIS CLASS IS NOT GUARANTEED TO BE THREAD SAFE
-    THE ONLY PURPOSE OF THE LOCKING MECHANISM PROVIDED IS TO PREVENT 
-    RACE CONDITIONS CAUSED BY ITS EMBEDDED ALLEGO-THREAD
-*/
 
 class TimeTracker {
     private:

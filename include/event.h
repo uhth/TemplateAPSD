@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef EVENT_H
+#define EVENT_H
 
 #include <cstdint>
 

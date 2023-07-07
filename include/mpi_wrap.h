@@ -4,7 +4,7 @@
 #include <mpi.h>
 #include "uint8_array2d.h"
 #include "config.h"
-#include "common.h"
+#include "event.h"
 
 class MpiWrapper {
     public:

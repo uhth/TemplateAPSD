@@ -10,9 +10,6 @@
 #include <memory>
 #include <map>
 
-/* ARRAY2D */
-/* WRAPS A ONE DIMENSIONAL ARRAY FOR IT TO BE USED AS A BI-DIMENSIONAL ARRAY */
-
 struct Coords2D {
     int row;
     int col;
