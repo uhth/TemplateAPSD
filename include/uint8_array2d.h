@@ -104,6 +104,8 @@ class Array2D {
         void callAlgFuncOnEveryElement(std::function<uint_fast8_t(Array2D*,size_t,size_t,size_t,size_t)>);
         void callAlgFuncOnEveryElementUseAux(std::function<uint_fast8_t(Array2D*,size_t,size_t,size_t,size_t)>);
         void callAlgFuncOnRangeUseAux(std::function<uint_fast8_t(Array2D*,size_t,size_t,size_t,size_t)>, Array2DRange&);
+        void foreach(const std::function<void(uint_fast8_t&)>&);
+        void foreachAux(const std::function<void(uint_fast8_t&)>&);
 
 };
 

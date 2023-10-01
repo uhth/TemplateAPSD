@@ -50,3 +50,13 @@ void Array2D::cpyArray(Array2D* src, size_t l_offset, size_t r_offset) {
         for(size_t col = 0 + l_offset; col < width - r_offset; ++col)
             *at(row,col) = *src->at(row,col);
 }
+
+void Array2D::foreach(const std::function<void(uint_fast8_t&)>& foo) {
+    for(size_t i = 0; i < size; ++i)
+        foo(array[i]);
+}
+
+void Array2D::foreachAux(const std::function<void(uint_fast8_t&)>& foo) {
+    for(size_t i = 0; i < size; ++i)
+        foo(auxArray[i]);
+}

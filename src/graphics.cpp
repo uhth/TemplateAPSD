@@ -87,12 +87,10 @@ void GraphicsContext::exit() {
 }
 
 void GraphicsContext::pushToEventQueue(EVENT event) {
-    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     eventQueue.push(event);
 }
 
 EVENT GraphicsContext::popFromEventQueue() {
-    std::scoped_lock<std::recursive_mutex> lock(r_mutex);
     EVENT event = NONE;
     if (!eventQueue.empty()) {
         event = eventQueue.front();

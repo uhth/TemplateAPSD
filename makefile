@@ -1,6 +1,6 @@
 
 CXX := g++
-CXXFLAGS := --std=c++17 -MMD -MP -g -Wall
+CXXFLAGS := --std=c++20 -MMD -MP -g -Wall
 OPTFLAG += -O2
 LDFLAGS := $(shell pkg-config --libs allegro-5 allegro_primitives-5 allegro_color-5 allegro_font-5 allegro_ttf-5)
 
